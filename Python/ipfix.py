@@ -268,7 +268,7 @@ if __name__ == "__main__":
 						}
 
 						# Iterate through template elements
-						for template_key, field_size in template_list[hashed_id]["Definitions"].iteritems():
+						for template_key, field_size in template_list[hashed_id]["Definitions"].items():
 							
 							# IPv4 Address
 							if ipfix_fields[template_key]["Type"] == "IPv4":

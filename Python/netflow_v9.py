@@ -246,7 +246,7 @@ if __name__ == "__main__":
 						logging.info("Data flow number " + str(flow_counter) + ", set ID " + str(flow_set_id) + " from " + str(sensor_address[0])) 
 						
 						### Iterate through the ordered template ###
-						for template_key, field_size in template_list[hashed_id]["Definitions"].iteritems():
+						for template_key, field_size in template_list[hashed_id]["Definitions"].items():
 							
 							# Check if the template key is defined in the Netflow v9 standard fields
 							#
