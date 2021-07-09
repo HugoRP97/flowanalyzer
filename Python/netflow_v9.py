@@ -235,6 +235,7 @@ if __name__ == "__main__":
 						"Sequence": packet["sequence_number"],
 						"Source ID": packet["source_id"],
 						"Time": now.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (now.microsecond / 1000) + "Z",
+						"@timestamp": now.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (now.microsecond / 1000) + "Z",
 						}
 						}
 						
