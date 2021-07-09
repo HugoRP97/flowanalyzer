@@ -6,6 +6,7 @@ import time, datetime, socket, struct, sys, os, json, socket, collections, itert
 from struct import *
 from elasticsearch import Elasticsearch,helpers
 from IPy import IP
+import humps
 
 # Parsing functions
 from parser_modules import mac_address, icmp_parse, ip_parse, netflowv9_parse, int_parse, ports_and_protocols, name_lookups
@@ -231,17 +232,17 @@ if __name__ == "__main__":
 						"_index": str("flow-" + now.strftime("%Y-%m-%d")),
 						"_type": "Flow",
 						"_source": {
-						"sensor": sensor_address[0],
-						"sequence": packet["sequence_number"],
-						"source_id": packet["source_id"],
-						"time": now.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (now.microsecond / 1000) + "Z",
+						"Sensor": sensor_address[0],
+						"Sequence": packet["sequence_number"],
+						"Source ID": packet["source_id"],
+						"Time": now.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (now.microsecond / 1000) + "Z",
 						}
 						}
 						
 						flow_counter += 1
 						record_num += 1
 
-						flow_index["_source"]["flow_type"] = "Netflow v9" # Note the type
+						flow_index["_source"]["Flow Type"] = "Netflow v9" # Note the type
 
 						logging.info("Data flow number " + str(flow_counter) + ", set ID " + str(flow_set_id) + " from " + str(sensor_address[0])) 
 						
@@ -261,12 +262,12 @@ if __name__ == "__main__":
 							### IPv4 field ###
 							if v9_fields[template_key]["Type"] == "IPv4":
 								flow_payload = ip_parser.parse_ipv4(flow_packet_contents,data_position,field_size)
-								flow_index["_source"]["ip_protocol_version"] = 4
+								flow_index["_source"]["IP Protocol Version"] = 4
 								
 							### IPv6 field ###
 							elif v9_fields[template_key]["Type"] == "IPv6":
 								flow_payload = ip_parser.parse_ipv6(flow_packet_contents,data_position,field_size)
-								flow_index["_source"]["ip_protocol_version"] = 6
+								flow_index["_source"]["IP Protocol Version"] = 6
 								
 							### Integer field ###
 							elif v9_fields[template_key]["Type"] == "Integer":
@@ -275,17 +276,17 @@ if __name__ == "__main__":
 									
 								# IANA protocol number in case the customer wants to sort by protocol number
 								if template_key == 4:							
-									flow_index["_source"]['protocol_number'] = flow_payload	
+									flow_index["_source"]['Protocol Number'] = flow_payload	
 										
 								# Do the special calculations for ICMP Code and Type (% operator)
 								elif template_key in [32,139]:
 									num_icmp = icmp_parser.icmp_num_type_code(flow_payload)
-									flow_index["_source"]['icmp_type'] = num_icmp[0]
-									flow_index["_source"]['icmp_code'] = num_icmp[1]
+									flow_index["_source"]['ICMP Type'] = num_icmp[0]
+									flow_index["_source"]['ICMP Code'] = num_icmp[1]
 
 									human_icmp = icmp_parser.icmp_human_type_code(flow_payload)
-									flow_index["_source"]['icmp_parsed_type'] = human_icmp[0]
-									flow_index["_source"]['icmp_parsed_code'] = human_icmp[1]
+									flow_index["_source"]['ICMP Parsed Type'] = human_icmp[0]
+									flow_index["_source"]['ICMP Parsed Code'] = human_icmp[1]
 
 								# Not a specially parsed field, just ignore
 								else:
@@ -302,35 +303,35 @@ if __name__ == "__main__":
 								#
 								# Incoming Source MAC
 								if template_key == 56:							
-									flow_index["_source"]['incoming_source_mac_oui'] = parsed_mac[1]
+									flow_index["_source"]['Incoming Source MAC OUI'] = parsed_mac[1]
 								
 								# Outgoing Destination MAC
 								elif template_key == 57:							
-									flow_index["_source"]['outgoing_destination_mac_oui'] = parsed_mac[1]
+									flow_index["_source"]['Outgoing Destination MAC OUI'] = parsed_mac[1]
 								
 								# Incoming Destination MAC
 								elif template_key == 80:							
-									flow_index["_source"]['incoming_destination_mac_oui'] = parsed_mac[1]
+									flow_index["_source"]['Incoming Destination MAC OUI'] = parsed_mac[1]
 								
 								# Outgoing Source MAC
 								elif template_key == 81:							
-									flow_index["_source"]['outgoing_source_mac_oui'] = parsed_mac[1]
+									flow_index["_source"]['Outgoing Source MAC OUI'] = parsed_mac[1]
 
 								# Station MAC Address
 								elif template_key == 365:							
-									flow_index["_source"]['station_mac_address_oui'] = parsed_mac[1]
+									flow_index["_source"]['Station MAC Address OUI'] = parsed_mac[1]
 
 								# WTP MAC Address
 								elif template_key == 367:							
-									flow_index["_source"]['wtp_mac_address_oui'] = parsed_mac[1]
+									flow_index["_source"]['WTP MAC Address OUI'] = parsed_mac[1]
 
 								# Dot1q Customer Source MAC Address
 								elif template_key == 414:							
-									flow_index["_source"]['dot_1_q_customer_source_mac_address_oui'] = parsed_mac[1]
+									flow_index["_source"]['Dot1q Customer Source MAC Address OUI'] = parsed_mac[1]
 
 								# Dot1q Customer Destination MAC Address
 								elif template_key == 415:							
-									flow_index["_source"]['dot_1_q_customer_destination_mac_address_oui'] = parsed_mac[1]
+									flow_index["_source"]['Dot1q Customer Destination MAC Address OUI'] = parsed_mac[1]
 								
 								# Not a special MAC field
 								else:
@@ -346,7 +347,6 @@ if __name__ == "__main__":
 							### Special parsed fields with pre-defined values ###
 							if "Options" in v9_fields[template_key]: # Integer fields with pre-defined values in the v9 standard	
 								try:
-									# TODO revisar
 									flow_index["_source"][v9_fields[template_key]["Index ID"]] = v9_fields[template_key]['Options'][int(flow_payload)]
 								except Exception as option_warning:
 									logging.warning("Failed to parse human option, template key " + str(template_key) + ", option key " + str(flow_payload) + ", from " + str(sensor_address[0]) + " - USING INTEGER VALUE")
@@ -362,50 +362,50 @@ if __name__ == "__main__":
 						### Traffic and Traffic Category tagging ###
 						#
 						# Transport protocols eg TCP, UDP, etc
-						if int(flow_index["_source"]['protocol_number']) in (6, 17, 33, 132):
-							traffic_tags = ports_protocols_parser.port_traffic_classifier(flow_index["_source"]["source_port"],flow_index["_source"]["destination_port"])
-							flow_index["_source"]["traffic"] = traffic_tags["Traffic"]
-							flow_index["_source"]["traffic_category"] = traffic_tags["Traffic Category"]
+						if int(flow_index["_source"]['Protocol Number']) in (6, 17, 33, 132):
+							traffic_tags = ports_protocols_parser.port_traffic_classifier(flow_index["_source"]["Source Port"],flow_index["_source"]["Destination Port"])
+							flow_index["_source"]["Traffic"] = traffic_tags["Traffic"]
+							flow_index["_source"]["Traffic Category"] = traffic_tags["Traffic Category"]
 						
 						# Non-transport protocols eg OSPF, VRRP, etc
 						else:
 							try: 
-								flow_index["_source"]["traffic_category"] = ports_protocols_parser.protocol_traffic_category(flow_index["_source"]['protocol_number'])
+								flow_index["_source"]["Traffic Category"] = ports_protocols_parser.protocol_traffic_category(flow_index["_source"]['Protocol Number'])
 							except:
-								flow_index["_source"]["traffic_category"] = "Uncategorized"
+								flow_index["_source"]["Traffic Category"] = "Uncategorized"
 						
 						### DNS Domain and FQDN tagging ###
 						if dns is True:
 
 							# Source DNS
 							if "IPv4 Source" in flow_index["_source"]:
-								source_lookups = name_lookups.ip_names(4,flow_index["_source"]["ipv4_source"])
+								source_lookups = name_lookups.ip_names(4,flow_index["_source"]["IPv4 Source"])
 							elif "IPv6 Source" in flow_index["_source"]:
-								source_lookups = name_lookups.ip_names(6,flow_index["_source"]["ipv6_source"])
+								source_lookups = name_lookups.ip_names(6,flow_index["_source"]["IPv6 Source"])
 							
-							flow_index["_source"]["source_FQDN"] = source_lookups["FQDN"]
-							flow_index["_source"]["source_domain"] = source_lookups["Domain"]
+							flow_index["_source"]["Source FQDN"] = source_lookups["FQDN"]
+							flow_index["_source"]["Source Domain"] = source_lookups["Domain"]
 
 							# Destination DNS
 							if "IPv4 Destination" in flow_index["_source"]:
-								destination_lookups = name_lookups.ip_names(4,flow_index["_source"]["ipv4_destination"])
+								destination_lookups = name_lookups.ip_names(4,flow_index["_source"]["IPv4 Destination"])
 							elif "IPv6 Destination" in flow_index["_source"]:
-								destination_lookups = name_lookups.ip_names(6,flow_index["_source"]["ipv6_destination"])
+								destination_lookups = name_lookups.ip_names(6,flow_index["_source"]["IPv6 Destination"])
 
-							flow_index["_source"]["source_FQDN"] = destination_lookups["FQDN"]
-							flow_index["_source"]["destination_domain"] = destination_lookups["Domain"]
+							flow_index["_source"]["Destination FQDN"] = destination_lookups["FQDN"]
+							flow_index["_source"]["Destination Domain"] = destination_lookups["Domain"]
 
 							# Content
 							src_dest_categories = [source_lookups["Content"],destination_lookups["Content"]]
 							
 							try: # Pick unique domain Content != "Uncategorized"
 								unique_content = [category for category in src_dest_categories if category != "Uncategorized"]
-								flow_index["_source"]["content"] = unique_content[0]
+								flow_index["_source"]["Content"] = unique_content[0]
 							except: # No unique domain Content
-								flow_index["_source"]["content"] = "Uncategorized"
+								flow_index["_source"]["Content"] = "Uncategorized"
 
 						### Append flow to the cache ###
-						flow_dic.append(flow_index)
+						flow_dic.append(humps.decamelize(humps.pascalize(flow_index)))
 						logging.debug(str(flow_index))	
 						logging.info("Ending data flow " + str(flow_counter))	
 				
@@ -415,7 +415,7 @@ if __name__ == "__main__":
 					record_num += 1
 					
 					logging.info("Creating Netflow v9 Options flow number " + str(flow_counter) + ", set ID " + str(flow_set_id) + " from " + str(sensor_address[0]))
-					flow_index["_source"]["flow_type"] = "Netflow v9 Options" # Note the type
+					flow_index["_source"]["Flow Type"] = "Netflow v9 Options" # Note the type
 
 					for scope_field in template_list[hashed_id]["Scope Fields"]:
 						logging.debug(str(scope_field))
