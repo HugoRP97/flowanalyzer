@@ -686,6 +686,7 @@ registered_ports = {
 
 # Non-registered, but commonly defined ports
 other_ports = {
+2152: {"Name" : "GTP"},
 1027:{"Name": "IPv6 6a44","Category":"IPv6"},
 1029:{"Name": "Microsoft DCOM"},
 1071:{"Name": "L2TP","Category":"VPN"},
